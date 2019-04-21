@@ -2,14 +2,28 @@
 name = "evol2d"
 version = "0.1.0"
 authors = ["Jarod duret <jarod8405@gmail.com>"]
+readme = "README.md"
 edition = "2018"
+
+
+[profile.dev]
+opt-level = 1
+
 
 [dependencies]
 ggez = "0.5.0-rc.2"
+ggez-goodies = { git = "https://github.com/Chaanks/ggez-goodies.git", branch="master" }
 toml = "0.5.0"
+warmy = "0.11"
+log = "0.4"
+fern = {version = "0.5", features = ["colored"] }
+chrono = "0.4"
 
-gfx_core = "0.8.3"
-gfx_device_gl = "0.15.3"
+specs = "0.14.0"
+specs-derive = "0.4"
 
-imgui = "0.0.22"
-imgui-gfx-renderer = "0.0.22"
+gfx_core = "0.9"
+gfx_device_gl = "0.16"
+
+imgui = "0.0.23"
+imgui-gfx-renderer = "0.0.23"

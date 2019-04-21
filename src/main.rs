@@ -1,28 +1,55 @@
 mod map;
+mod player;
+mod imgui_wrapper;
+mod input;
+mod resources;
+mod scenes;
+mod systems;
+mod types;
+mod util;
+mod world;
+mod components;
 
+use std::env;
+use std::path;
 use ggez::*;
 use ggez::graphics::{DrawMode, MeshBuilder, Mesh, Color, Text, Rect};
 use ggez::event::{self, Axis, Button, GamepadId, KeyCode, KeyMods, MouseButton};
-use ggez::input;
 use ggez::{nalgebra as na};
 use map::Map;
+
+
+
+use crate::imgui_wrapper::ImGuiWrapper;
 
 const SCREEN_SIZE: (f32, f32) = (1200.0, 800.0);
 
 struct State {
     map: Map,
     mouse: Mouse,
+    imgui_wrapper: ImGuiWrapper,
+    scenes: scenes::Stack,
+    input_binding: input::Binding,
 }
 
 impl State {
-    fn new(ctx: &mut Context) -> GameResult<State> {
+    fn new(ctx: &mut Context, resource_path: &path::Path) -> GameResult<State> {
         let map = Map::new(ctx);
         let mouse = Default::default();
+        let imgui_wrapper = ImGuiWrapper::new(ctx);
+
+        let world = world::World::new(resource_path);
+        let mut scenestack = scenes::Stack::new(ctx, world);
+        let initial_scene = Box::new(scenes::level::LevelScene::new(ctx, &mut scenestack.world));
+        scenestack.push(initial_scene);
 
         Ok(
             Self {
                 map,
-                mouse
+                mouse,
+                imgui_wrapper,
+                input_binding: input::create_input_binding(),
+                scenes: scenestack,
             }
         )
     }
@@ -55,14 +82,21 @@ impl Mouse {
 
 impl ggez::event::EventHandler for State {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        if input::mouse::button_pressed(ctx, input::mouse::MouseButton::Left) {
-            if input::mouse::position(ctx) != self.mouse.relative_position() {
-                self.mouse.set_position(input::mouse::position(ctx));
+        if ggez::input::mouse::button_pressed(ctx, ggez::input::mouse::MouseButton::Left) {
+            if ggez::input::mouse::position(ctx) != self.mouse.relative_position() {
+                self.mouse.set_position(ggez::input::mouse::position(ctx));
                 let mouse_position = self.mouse.grid_position();
                 println!("button pressed x: {}, y: {}", mouse_position.x, mouse_position.y);
                 self.map.set_selected_tile(ctx, mouse_position);
             }
         }
+
+        const DESIRED_FPS: u32 = 60;
+        while timer::check_update_time(ctx, DESIRED_FPS) {
+            self.scenes.update(ctx);
+        }
+        self.scenes.world.resources.sync(ctx);
+
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
@@ -72,26 +106,94 @@ impl ggez::event::EventHandler for State {
         let fps_display = Text::new(format!("FPS: {}", fps as u32));
 
         self.map.render(ctx);
-        graphics::draw(ctx, &fps_display, (na::Point2::new(10.0, 5.0), graphics::WHITE),)?;
+        graphics::draw(ctx, &fps_display, (na::Point2::new(900.0, 20.0), graphics::WHITE),)?;
+        self.scenes.draw(ctx);
+        self.imgui_wrapper.render_scene_ui(ctx, &mut self.scenes);
        
         graphics::present(ctx)?;
         Ok(())
 
     }
+
+    fn key_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        keycode: event::KeyCode,
+        _keymod: event::KeyMods,
+        _repeat: bool,
+    ) {
+        if let Some(ev) = self.input_binding.resolve(keycode) {
+            self.scenes.input(ev, true);
+        }
+    }
+
+    fn key_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        keycode: event::KeyCode,
+        _keymod: event::KeyMods,
+    ) {
+        if let Some(ev) = self.input_binding.resolve(keycode) {
+            self.scenes.input(ev, false);
+        }
+    }
+
+  fn mouse_motion_event(&mut self,  _ctx: &mut Context, x: f32, y: f32, _xrel: f32, _yrel: f32) {
+      self.imgui_wrapper.update_mouse_pos(x, y);
+  }
+
+
+  fn mouse_button_down_event(&mut self, _ctx: &mut Context, button: MouseButton, _x: f32, _y: f32 ) {
+    self.imgui_wrapper.update_mouse_down((
+      button == MouseButton::Left,
+      button == MouseButton::Right,
+      button == MouseButton::Middle,
+    ));
+  }
+
+  fn mouse_button_up_event(&mut self, _ctx: &mut Context, button: MouseButton, _x: f32, _y: f32) {
+    self.imgui_wrapper.update_mouse_down((
+        match button {
+            MouseButton::Left => false,
+            _ => true,
+        },
+        match button {
+            MouseButton::Right => false,
+            _ => true,
+        },
+        match button {
+            MouseButton::Middle => false,
+            _ => true,
+        },
+    ));
+    }
 }
 
 fn main() {
 
-    let c = conf::Conf::new();
+    util::setup_logging();
 
-    let (ref mut ctx, ref mut event_loop) = ContextBuilder::new("hello_ggez", "awesome_person")
-        .conf(c)
-        .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1))
-        .build()
-        .unwrap();
+    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+        let mut path = path::PathBuf::from(manifest_dir);
+        path.push("resources");
+        path
+    } else {
+        path::PathBuf::from("./resources")
+    };
+    println!("Resource dir: {:?}", resource_dir);
 
-    let state = &mut State::new(ctx).unwrap();
+    let cb = ContextBuilder::new("game-template", "ggez")
+        .window_setup(conf::WindowSetup::default().title("game template"))
+        .window_mode(conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1))
+        .add_resource_path(&resource_dir);
+    let (ctx, ev) = &mut cb.build().unwrap();
 
-    event::run(ctx, event_loop, state).unwrap();
+    let state = &mut State::new(ctx, &resource_dir).unwrap();
+    if let Err(e) = event::run(ctx, ev, state) {
+        println!("Error encountered: {}", e);
+    } else {
+        println!("Game exited cleanly.");
+    }
+
 
 }

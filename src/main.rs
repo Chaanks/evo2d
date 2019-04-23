@@ -1,5 +1,4 @@
 mod map;
-mod player;
 mod imgui_wrapper;
 mod input;
 mod resources;
@@ -71,10 +70,15 @@ impl Mouse {
         mint::Point2 { x: self.x, y: self.y }
     }
 
+    fn get_position(&self) -> na::Point2<f32> {
+        na::Point2::new(self.x, self.y)
+    }
+
     fn set_position(&mut self, pos: mint::Point2<f32>) {
         self.x = pos.x;
         self.y = pos.y;
     }
+
 }
 
 
@@ -83,11 +87,13 @@ impl Mouse {
 impl ggez::event::EventHandler for State {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         if ggez::input::mouse::button_pressed(ctx, ggez::input::mouse::MouseButton::Left) {
-            if ggez::input::mouse::position(ctx) != self.mouse.relative_position() {
+            if ggez::input::mouse::position(ctx) != self.mouse.relative_position(){
                 self.mouse.set_position(ggez::input::mouse::position(ctx));
-                let mouse_position = self.mouse.grid_position();
-                println!("button pressed x: {}, y: {}", mouse_position.x, mouse_position.y);
-                self.map.set_selected_tile(ctx, mouse_position);
+                if map::Map::on_map(self.mouse.get_position()) {
+                    let mouse_position = self.mouse.grid_position();
+                    println!("button pressed x: {}, y: {}", mouse_position.x, mouse_position.y);
+                    self.map.set_selected_tile(ctx, mouse_position);
+                }
             }
         }
 
@@ -99,6 +105,7 @@ impl ggez::event::EventHandler for State {
 
         Ok(())
     }
+
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
 
@@ -115,57 +122,46 @@ impl ggez::event::EventHandler for State {
 
     }
 
-    fn key_down_event(
-        &mut self,
-        _ctx: &mut Context,
-        keycode: event::KeyCode,
-        _keymod: event::KeyMods,
-        _repeat: bool,
-    ) {
+    fn key_down_event(&mut self, _ctx: &mut Context, keycode: event::KeyCode, _keymod: event::KeyMods, repeat: bool,) {
         if let Some(ev) = self.input_binding.resolve(keycode) {
             self.scenes.input(ev, true);
         }
     }
 
-    fn key_up_event(
-        &mut self,
-        _ctx: &mut Context,
-        keycode: event::KeyCode,
-        _keymod: event::KeyMods,
-    ) {
+    fn key_up_event(&mut self, _ctx: &mut Context, keycode: event::KeyCode, _keymod: event::KeyMods,) {
         if let Some(ev) = self.input_binding.resolve(keycode) {
             self.scenes.input(ev, false);
         }
     }
 
-  fn mouse_motion_event(&mut self,  _ctx: &mut Context, x: f32, y: f32, _xrel: f32, _yrel: f32) {
-      self.imgui_wrapper.update_mouse_pos(x, y);
-  }
+    fn mouse_motion_event(&mut self,  _ctx: &mut Context, x: f32, y: f32, _xrel: f32, _yrel: f32) {
+        self.imgui_wrapper.update_mouse_pos(x, y);
+    }
 
 
-  fn mouse_button_down_event(&mut self, _ctx: &mut Context, button: MouseButton, _x: f32, _y: f32 ) {
-    self.imgui_wrapper.update_mouse_down((
-      button == MouseButton::Left,
-      button == MouseButton::Right,
-      button == MouseButton::Middle,
-    ));
-  }
+    fn mouse_button_down_event(&mut self, _ctx: &mut Context, button: MouseButton, _x: f32, _y: f32 ) {
+        self.imgui_wrapper.update_mouse_down((
+        button == MouseButton::Left,
+        button == MouseButton::Right,
+        button == MouseButton::Middle,
+        ));
+    }
 
-  fn mouse_button_up_event(&mut self, _ctx: &mut Context, button: MouseButton, _x: f32, _y: f32) {
-    self.imgui_wrapper.update_mouse_down((
-        match button {
-            MouseButton::Left => false,
-            _ => true,
-        },
-        match button {
-            MouseButton::Right => false,
-            _ => true,
-        },
-        match button {
-            MouseButton::Middle => false,
-            _ => true,
-        },
-    ));
+    fn mouse_button_up_event(&mut self, _ctx: &mut Context, button: MouseButton, _x: f32, _y: f32) {
+        self.imgui_wrapper.update_mouse_down((
+            match button {
+                MouseButton::Left => false,
+                _ => true,
+            },
+            match button {
+                MouseButton::Right => false,
+                _ => true,
+            },
+            match button {
+                MouseButton::Middle => false,
+                _ => true,
+            },
+        ));
     }
 }
 

@@ -3,6 +3,7 @@ use crate::types::*;
 use specs::*;
 use specs_derive::*;
 
+
 // ///////////////////////////////////////////////////////////////////////
 // Components
 // ///////////////////////////////////////////////////////////////////////
@@ -24,6 +25,10 @@ pub struct Motion {
     pub acceleration: na::Vector2<f32>,
 }
 
+#[derive(Clone, Debug, Default, Component)]
+#[storage(NullStorage)]
+pub struct ArrowController;
+
 /// Just a marker that a particular entity is the player.
 #[derive(Clone, Debug, Default, Component)]
 #[storage(NullStorage)]
@@ -35,9 +40,12 @@ pub struct Shot {
     pub damage: u32,
 }
 
+
+
 pub fn register_components(specs_world: &mut World) {
     specs_world.register::<Transform>();
     specs_world.register::<Motion>();
+    specs_world.register::<ArrowController>();
     specs_world.register::<Shot>();
     specs_world.register::<Player>();
 }

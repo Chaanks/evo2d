@@ -817,7 +817,7 @@ dependencies = [
 [[package]]
 name = "ggez-goodies"
 version = "0.5.0-rc.1"
-source = "git+https://github.com/Chaanks/ggez-goodies.git#ce5149bde5d4fc425008d478c5ff3032ab52321c"
+source = "git+https://github.com/Chaanks/ggez-goodies.git#70c79e51b61d1ba08fc9c416a81a2781c52c01fb"
 dependencies = [
  "ggez 0.5.0-rc.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "imgui 0.0.23 (registry+https://github.com/rust-lang/crates.io-index)",

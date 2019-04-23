@@ -24,8 +24,8 @@ pub type State = input::InputState<Axis, Button>;
 // Create the default keybindings for our input state
 pub fn create_input_binding() -> input::InputBinding<Axis, Button> {
     input::InputBinding::new()
-        .bind_key_to_axis(KeyCode::Up, Axis::Vertical, true)
-        .bind_key_to_axis(KeyCode::Down, Axis::Vertical, false)
+        .bind_key_to_axis(KeyCode::Up, Axis::Vertical, false)
+        .bind_key_to_axis(KeyCode::Down, Axis::Vertical, true)
         .bind_key_to_axis(KeyCode::Left, Axis::Horizontal, false)
         .bind_key_to_axis(KeyCode::Right, Axis::Horizontal, true)
         .bind_key_to_button(KeyCode::C, Button::Select)

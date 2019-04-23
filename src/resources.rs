@@ -3,10 +3,50 @@
 use std::path;
 
 use ggez::{self, graphics};
+use specs::Entity;
 use log::*;
 use warmy;
 
+use crate::types::na;
 use crate::types::Error;
+
+
+// ///////////////////////////////////////////////////////////////////////
+// Resources
+// ///////////////////////////////////////////////////////////////////////
+
+
+#[derive(Default)]
+pub struct Input {
+    pub vertical: f32,
+    pub horizontal: f32,
+    pub mouse_position: (f32, f32),
+}
+
+impl Input {
+    pub fn new() -> Input {
+        Input {
+            vertical: 0.0,
+            horizontal: 0.0,
+            mouse_position: (0.0, 0.0),
+        }
+    }
+}
+
+
+#[derive(Default)]
+pub struct Selected {
+    pub player: Option<Entity>,
+}
+
+impl Selected {
+    pub fn new() -> Selected {
+        Selected {
+            player: None,
+        }
+    }
+}
+
 
 /// Again, because `warmy` assumes direct filesystem dirs
 /// and ggez assumes all its resources live in a specific

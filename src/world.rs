@@ -37,17 +37,6 @@ impl World {
             specs_world: w,
         };
 
-        // Make a test entity.
-        the_world
-            .specs_world
-            .create_entity()
-            .with(components::Transform { position: na::Point2::new(0.0, 0.0), rotation: 0.0 })
-            .with(components::Motion {
-                velocity: na::Vector2::new(1.0, 1.0),
-                acceleration: na::Vector2::new(1.0, 1.0),
-            })
-            .build();
-
         the_world
     }
 }

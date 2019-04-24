@@ -31,8 +31,13 @@ pub struct ArrowController;
 
 /// Just a marker that a particular entity is the player.
 #[derive(Clone, Debug, Default, Component)]
-#[storage(NullStorage)]
-pub struct Player;
+#[storage(VecStorage)]
+pub struct Player {
+    pub name: String,
+    pub health: f32,
+    pub food: f32,
+    pub water: f32,
+}
 
 #[derive(Clone, Debug, Default, Component)]
 #[storage(VecStorage)]

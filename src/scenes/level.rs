@@ -79,6 +79,11 @@ impl scene::Scene<World, input::Event> for LevelScene {
             input_state.vertical = gameworld.input.get_axis_raw(input::Axis::Vertical);
             input_state.horizontal = gameworld.input.get_axis_raw(input::Axis::Horizontal);
             input_state.mouse_position = (ggez::input::mouse::position(ctx).x, ggez::input::mouse::position(ctx).y);
+            if ggez::input::mouse::button_pressed(ctx, ggez::input::mouse::MouseButton::Left) {
+                input_state.mouse_pressed = true
+            } else {
+                input_state.mouse_pressed = false
+            }
         }
         self.dispatcher.dispatch(&gameworld.specs_world.res);
         if self.done {
@@ -142,14 +147,28 @@ impl scene::Scene<World, input::Event> for LevelScene {
                 match selected_entity.player {
                     Some(e) =>  {
                         let pos = positions.get(e).unwrap().position;
-                        ui.text(im_str!("player position ({:.1}{:.1})", pos.x, pos.y))
+                        ui.text_colored(ImVec4::new(1.0, 1.0, 1.0, 1.0),im_str!("Player:  XXX "));
+                        ui.separator();
+                        ui.text(im_str!("player position ({:.1} {:.1})", pos.x, pos.y));
+                        ui.text(im_str!("Health"));
+                        ui.progress_bar(0.8)
+                            .size((100.0, 15.0))
+                            .overlay_text(im_str!(""))           
+                            .build();
+
+                        ui.text(im_str!("Food: 20/100"));
+                        ui.text(im_str!("Water: 90/100"));
+                        ui.separator();
                     },
                     None => println!("none"), 
                 }
+                
+
 
                
 
-        });        
+        });
+          
     }
 
     fn name(&self) -> &str {

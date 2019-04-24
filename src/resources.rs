@@ -21,6 +21,7 @@ pub struct Input {
     pub vertical: f32,
     pub horizontal: f32,
     pub mouse_position: (f32, f32),
+    pub mouse_pressed: bool,
 }
 
 impl Input {
@@ -29,6 +30,7 @@ impl Input {
             vertical: 0.0,
             horizontal: 0.0,
             mouse_position: (0.0, 0.0),
+            mouse_pressed: false,
         }
     }
 }
@@ -37,12 +39,14 @@ impl Input {
 #[derive(Default)]
 pub struct Selected {
     pub player: Option<Entity>,
+    pub isClicked: bool,
 }
 
 impl Selected {
     pub fn new() -> Selected {
         Selected {
             player: None,
+            isClicked: false,
         }
     }
 }

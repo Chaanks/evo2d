@@ -72,10 +72,33 @@ impl<'a> specs::System<'a> for SelectionSystem {
         for (entity, transform) in (&*entity, &transform).join() {
                 if input.mouse_position.0 >= transform.position.x - 12.0 && input.mouse_position.0 < transform.position.x + 12.0 {
                     if input.mouse_position.1 >= transform.position.y - 12.0 && input.mouse_position.1 < transform.position.y + 12.0 {
-                        selection.player = Some(entity);
-                        println!("Entity selected");
+
+                        if selection.player == Some(entity) {
+                            if selection.isClicked {
+                                if input.mouse_pressed {
+                                    selection.isClicked = false;
+                                }
+                            } else if input.mouse_pressed {
+                                selection.isClicked = true
+                            }
+
+                            return;
+
+                        } else if selection.player != Some(entity) {
+                            if selection.isClicked && input.mouse_pressed {
+                                selection.player = Some(entity);
+                            } else if !selection.isClicked {
+                                selection.player = Some(entity);
+                            }
+                                return;
+                        }
                     }
                 }
         }
+
+        if !selection.isClicked {
+            selection.player = None;
+        }
+
     }
 }

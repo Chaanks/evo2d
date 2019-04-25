@@ -149,21 +149,33 @@ impl scene::Scene<World, input::Event> for LevelScene {
                         let pos = positions.get(e).unwrap().position;
                         ui.text_colored(ImVec4::new(1.0, 1.0, 1.0, 1.0),im_str!("Player:  XXX "));
                         ui.separator();
-                        ui.text(im_str!("player position ({:.1} {:.1})", pos.x, pos.y));
-                        ui.text(im_str!("Health"));
-                        ui.progress_bar(0.8)
-                            .size((100.0, 15.0))
-                            .overlay_text(im_str!(""))           
-                            .build();
+                        ui.text(im_str!("Position ({:.1} {:.1})", pos.x, pos.y));
+                        ui.with_color_var(ImGuiCol::PlotHistogram, ImVec4::new(0.0, 1.0, 0.0, 1.0), || {
+                            ui.text(im_str!("Health"));
+                            ui.progress_bar(0.8)
+                                .size((100.0, 15.0))
+                                .overlay_text(im_str!("80/100"))           
+                                .build();
+                        });
 
-                        ui.text(im_str!("Food: 20/100"));
-                        ui.text(im_str!("Water: 90/100"));
+                            ui.text(im_str!("Food"));
+                            ui.progress_bar(0.8)
+                                .size((100.0, 15.0))
+                                .overlay_text(im_str!("80/100"))           
+                                .build();              
+
+                        ui.with_color_var(ImGuiCol::PlotHistogram, ImVec4::new(0.0, 0.0, 1.0, 1.0), || {
+                            ui.text(im_str!("Water"));
+                            ui.progress_bar(0.2)
+                                .size((100.0, 15.0))
+                                .overlay_text(im_str!("20/100"))           
+                                .build();
+                        });
                         ui.separator();
                     },
                     None => println!("none"), 
                 }
                 
-
 
                
 

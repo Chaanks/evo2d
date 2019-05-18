@@ -6,6 +6,22 @@ use crate::map;
 use specs::{self, Join};
 
 
+// draw directly in level for the moment because we need a ctx
+pub struct RenderSystem;
+
+impl<'a> specs::System<'a> for RenderSystem {
+    type SystemData = (
+        specs::ReadStorage<'a, Transform>,
+        specs::ReadStorage<'a, Graphic>,
+    );
+
+    fn run(&mut self, (pos, mesh): Self::SystemData) {
+        for (pos, mesh) in (&pos, &mesh).join() {
+
+        }
+    }
+}
+
 pub struct MovementSystem;
 
 impl<'a> specs::System<'a> for MovementSystem {
@@ -21,16 +37,16 @@ impl<'a> specs::System<'a> for MovementSystem {
         for (pos, motion) in (&mut pos, &motion).join() {
             pos.position += motion.velocity;
 
-            if  pos.position.x < map::TILE_SIZE + map::WIDTH_OFFSET  + 12.0 {
+            if  pos.position.x < map::TILE_SIZE + map::WIDTH_OFFSET  + pos.size {
                 pos.position.x -= motion.velocity.x;
             
-            } else if  pos.position.x > map::SIZE - map::TILE_SIZE + map::WIDTH_OFFSET - 12.0 {
+            } else if  pos.position.x > map::SIZE - map::TILE_SIZE + map::WIDTH_OFFSET - pos.size {
                 pos.position.x -= motion.velocity.x;
             }
 
-            if pos.position.y < map::TILE_SIZE + map::HEIGHT_OFFSET  + 12.0 {
+            if pos.position.y < map::TILE_SIZE + map::HEIGHT_OFFSET  + pos.size {
                 pos.position.y -= motion.velocity.y;
-            } else if  pos.position.y > map::SIZE - map::TILE_SIZE + map::HEIGHT_OFFSET - 12.0 {
+            } else if  pos.position.y > map::SIZE - map::TILE_SIZE + map::HEIGHT_OFFSET - pos.size {
                 pos.position.y -= motion.velocity.y;
             }
             
@@ -70,8 +86,8 @@ impl<'a> specs::System<'a> for SelectionSystem {
     fn run(&mut self, (entity, input, mut selection, transform): Self::SystemData) {
         //println!("Mouse position: {:?}", input.mouse_position);
         for (entity, transform) in (&*entity, &transform).join() {
-                if input.mouse_position.0 >= transform.position.x - 12.0 && input.mouse_position.0 < transform.position.x + 12.0 {
-                    if input.mouse_position.1 >= transform.position.y - 12.0 && input.mouse_position.1 < transform.position.y + 12.0 {
+                if input.mouse_position.0 >= transform.position.x - transform.size && input.mouse_position.0 < transform.position.x + transform.size {
+                    if input.mouse_position.1 >= transform.position.y - transform.size && input.mouse_position.1 < transform.position.y + transform.size {
 
                         if selection.player == Some(entity) {
                             if selection.isClicked {

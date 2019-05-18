@@ -15,6 +15,16 @@ use crate::types::Error;
 // Resources
 // ///////////////////////////////////////////////////////////////////////
 
+#[derive(Default)]
+pub struct Map {
+    
+}
+
+#[derive(Default)]
+pub struct Cell {
+    
+}
+
 
 #[derive(Default)]
 pub struct Input {

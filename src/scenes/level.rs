@@ -56,12 +56,19 @@ impl LevelScene {
             .build()
     }
 
-    fn new_agent(world: &mut World) {
+    fn new_agent(world: &mut World, ctx: &mut ggez::Context) {
         // Make a test entity.
+        let size = 6.0;
+        let mesh = &mut graphics::MeshBuilder::new();
+        mesh.circle(graphics::DrawMode::fill(), ggez::mint::Point2{x: 0.0, y: 0.0}, size, 0.001, graphics::Color::new(1.0, 0.0, 0.494, 0.9));
+        mesh.circle(graphics::DrawMode::stroke(2.0), ggez::mint::Point2{x: 0.0, y: 0.0}, size, 0.001, graphics::Color::new(0.0, 0.0, 0.0, 0.9));
+        let circle = mesh.build(ctx).unwrap();
+
         world
             .specs_world
             .create_entity()
-            .with(components::Transform { position: na::Point2::new(300.0, 300.0), rotation: 0.0 })
+            .with(components::Graphic { mesh: circle })
+            .with(components::Transform { position: na::Point2::new(300.0, 300.0), rotation: 0.0, size })
             .with(components::Motion {
                 velocity: na::Vector2::new(0.0, 0.0),
                 acceleration: na::Vector2::new(0.0, 0.0),
@@ -95,14 +102,11 @@ impl scene::Scene<World, input::Event> for LevelScene {
 
     fn draw(&mut self, gameworld: &mut World, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
         let pos = gameworld.specs_world.read_storage::<components::Transform>();
-        let mesh = &mut graphics::MeshBuilder::new();
-        mesh.circle(graphics::DrawMode::fill(), ggez::mint::Point2{x: 0.0, y: 0.0}, 12.0, 0.001, graphics::Color::new(1.0, 0.0, 0.494, 0.8));
-        mesh.circle(graphics::DrawMode::stroke(3.0), ggez::mint::Point2{x: 0.0, y: 0.0}, 12.0, 0.001, graphics::Color::new(0.0, 0.0, 0.0, 0.8));
-        let circle = mesh.build(ctx).unwrap();
-        for p in pos.join() {
+        let mesh = gameworld.specs_world.read_storage::<components::Graphic>();
+        for (p, m) in (&pos, &mesh).join() {
             graphics::draw(
                 ctx,
-                &circle,
+                &m.mesh,
                 graphics::DrawParam::default().dest(p.position),
             )?;
         }
@@ -138,7 +142,7 @@ impl scene::Scene<World, input::Event> for LevelScene {
 
                 ui.separator();
                 if ui.button(im_str!("New Entity"), ImVec2::new(100.0, 25.0)) {
-                    Self::new_agent(gameworld);
+                    Self::new_agent(gameworld, ctx);
                 }
 
                 ui.separator();

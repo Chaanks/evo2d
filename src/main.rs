@@ -8,6 +8,7 @@ mod types;
 mod util;
 mod world;
 mod components;
+mod network;
 
 use std::env;
 use std::path;

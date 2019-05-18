@@ -14,6 +14,7 @@ use crate::resources;
 use crate::scenes;
 use crate::systems::*;
 use crate::world::World;
+use crate::network;
 
 
 pub struct LevelScene {
@@ -51,6 +52,7 @@ impl LevelScene {
     fn register_systems() -> specs::Dispatcher<'static, 'static> {
         specs::DispatcherBuilder::new()
             .with(InputSystem, "sys_input", &[])
+            .with(NetworkSystem, "sys_network", &[])
             .with(MovementSystem, "sys_movement", &["sys_input"])
             .with(SelectionSystem, "sys_selection", &[])
             .build()
@@ -74,6 +76,7 @@ impl LevelScene {
                 acceleration: na::Vector2::new(0.0, 0.0),
             })
             .with(components::ArrowController)
+            .with(components::Connection::default())
             .build();
     }
 }

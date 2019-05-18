@@ -9,7 +9,7 @@ use warmy;
 
 use crate::types::na;
 use crate::types::Error;
-
+use crate::map::Cell;
 
 // ///////////////////////////////////////////////////////////////////////
 // Resources
@@ -17,14 +17,8 @@ use crate::types::Error;
 
 #[derive(Default)]
 pub struct Map {
-    
+    cells: Vec<Cell>,
 }
-
-#[derive(Default)]
-pub struct Cell {
-    
-}
-
 
 #[derive(Default)]
 pub struct Input {

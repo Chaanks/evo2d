@@ -6,6 +6,21 @@ use crate::map;
 use specs::{self, Join};
 
 
+pub struct NetworkSystem;
+
+impl<'a> specs::System<'a> for NetworkSystem {
+    type SystemData = (
+        specs::ReadStorage<'a, Transform>,
+        specs::WriteStorage<'a, Connection>,
+    );
+
+    fn run(&mut self, (pos, mut con): Self::SystemData) {
+        for (pos, con) in (&pos, &mut con).join() {
+            con.socket.send_data("yo");
+        }
+    }
+}
+
 // draw directly in level for the moment because we need a ctx
 pub struct RenderSystem;
 

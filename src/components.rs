@@ -1,12 +1,22 @@
 use crate::types::*;
+use crate::network::Client;
 
 use specs::*;
 use specs_derive::*;
 use ggez::graphics;
 
+
 // ///////////////////////////////////////////////////////////////////////
 // Components
 // ///////////////////////////////////////////////////////////////////////
+
+
+/// Network
+#[derive(Default, Component)]
+#[storage(VecStorage)]
+pub struct Connection {
+    pub socket: Client,
+}
 
 /// Mesh
 #[derive(Clone, Debug, Component)]
@@ -61,4 +71,5 @@ pub fn register_components(specs_world: &mut World) {
     specs_world.register::<Shot>();
     specs_world.register::<Player>();
     specs_world.register::<Graphic>();
+    specs_world.register::<Connection>();
 }

@@ -1,6 +1,7 @@
 use ggez::*;
 use ggez::graphics::{DrawMode, MeshBuilder, Mesh, Color, Text, Rect};
 use ggez::{nalgebra as na};
+use specs::Entity;
 
 pub const SIZE: f32 = 750.0;
 pub const CELL_NUMBER: u32 = 40;
@@ -56,15 +57,34 @@ const BLUE: (f32, f32, f32) = (0.0, 0.33, 0.77);
 const GRAY: (f32, f32, f32) = (0.48, 0.48, 0.48);
 
 #[derive(Debug)]
-enum Tile {
+pub enum Tile {
     Undefined = -1,
     Wall = 0,
     Grass = 1,
     Water = 2,
 }
 
+pub struct Cell {
+    pub tile: Tile,
+    entities: Vec<Entity>,
+}
+
+impl Cell {
+    pub fn new(tile: Tile) -> Self {
+        Self {
+            tile,
+            entities: Vec::new(),
+        }
+    }
+}
+
+impl Default for Cell {
+    fn default() -> Self { Cell::new(Tile::Undefined) }
+}
+
+
 pub struct Map {
-    tiles: Vec<Tile>,
+    cells: Vec<Cell>,
     bg: Mesh,
     selected_tile: Mesh,
 }
@@ -81,18 +101,18 @@ impl Map {
         println!("{}", package_info);
         */
 
-        let mut tiles = vec!();
+        let mut cells = vec!();
 
         for tile in TILESET.iter() {
             match tile {
-                -1 => tiles.push(Tile::Undefined),
-                0 => tiles.push(Tile::Wall),
-                1 => tiles.push(Tile::Grass),
-                2 => tiles.push(Tile::Water),
+                -1 => cells.push(Cell::new(Tile::Undefined)),
+                0 => cells.push(Cell::new(Tile::Wall)),
+                1 => cells.push(Cell::new(Tile::Grass)),
+                2 => cells.push(Cell::new(Tile::Water)),
                 _ => println!("Ain't special"),
             }
         }
-        let bg =  Self::background(&tiles, ctx);
+        let bg =  Self::background(&cells, ctx);
         let selected_tile = graphics::Mesh::new_rectangle(
             ctx,
             graphics::DrawMode::fill(),
@@ -101,7 +121,7 @@ impl Map {
         ).unwrap();
 
         Self {
-            tiles,
+            cells,
             bg,
             selected_tile,
         }
@@ -121,7 +141,7 @@ impl Map {
         ).unwrap();
     }
 
-    fn background(tiles: &Vec<Tile>, ctx: &mut Context) -> Mesh{
+    fn background(cells: &Vec<Cell>, ctx: &mut Context) -> Mesh{
         let mesh = &mut MeshBuilder::new();
 
         for i in 0..CELL_NUMBER as u32{
@@ -131,7 +151,7 @@ impl Map {
                 
 
                 let index = i * CELL_NUMBER + j;
-                let current = &tiles[index as usize];
+                let current = &cells[index as usize].tile;
 
 
                 let mut color: Color;

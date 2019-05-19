@@ -15,10 +15,7 @@ use crate::map::Cell;
 // Resources
 // ///////////////////////////////////////////////////////////////////////
 
-#[derive(Default)]
-pub struct Map {
-    cells: Vec<Cell>,
-}
+
 
 #[derive(Default)]
 pub struct Input {

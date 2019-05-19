@@ -15,6 +15,7 @@ use crate::scenes;
 use crate::systems::*;
 use crate::world::World;
 use crate::network;
+use crate::map;
 
 
 pub struct LevelScene {
@@ -39,6 +40,9 @@ impl LevelScene {
         world
             .specs_world
             .add_resource(resources::Selected::new());
+        world
+            .specs_world
+            .add_resource(map::Map::new(ctx));
 
         let dispatcher = Self::register_systems();
 
@@ -94,6 +98,14 @@ impl scene::Scene<World, input::Event> for LevelScene {
             } else {
                 input_state.mouse_pressed = false
             }
+
+            let mut map = gameworld.specs_world.write_resource::<map::Map>();
+            let mouse_pos = na::Point2::new(input_state.mouse_position.0, input_state.mouse_position.1);
+            if map::Map::on_map(mouse_pos) {
+                let mouse_position = map::Map::grid_position(mouse_pos);
+                println!("button pressed x: {}, y: {}", mouse_position.x, mouse_position.y);
+                map.set_selected_tile(ctx, mouse_position);
+            }
         }
         self.dispatcher.dispatch(&gameworld.specs_world.res);
         if self.done {
@@ -104,6 +116,8 @@ impl scene::Scene<World, input::Event> for LevelScene {
     }
 
     fn draw(&mut self, gameworld: &mut World, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
+        let map = gameworld.specs_world.read_resource::<map::Map>();
+        map.render(ctx);
         let pos = gameworld.specs_world.read_storage::<components::Transform>();
         let mesh = gameworld.specs_world.read_storage::<components::Graphic>();
         for (p, m) in (&pos, &mesh).join() {

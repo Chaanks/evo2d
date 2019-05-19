@@ -91,16 +91,6 @@ pub struct Map {
 
 impl Map {
     pub fn new(ctx: &mut Context) -> Map{
-
-        //create from toml file
-        /*
-        let contents = fs::read_to_string(filename)
-        .expect("Something went wrong reading the file");
-
-        let package_info: Value = toml::from_str(contents.as_str()).unwrap();
-        println!("{}", package_info);
-        */
-
         let mut cells = vec!();
 
         for tile in TILESET.iter() {
@@ -186,5 +176,9 @@ impl Map {
             return false;
         }
         true
+    }
+
+    pub fn grid_position(pos: na::Point2<f32>) -> na::Point2<u32> {
+        na::Point2::new(((pos.x - 10.0) / TILE_SIZE) as u32, ((pos.y - 25.0) / TILE_SIZE) as u32)
     }
 }

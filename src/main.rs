@@ -25,7 +25,6 @@ use crate::imgui_wrapper::ImGuiWrapper;
 const SCREEN_SIZE: (f32, f32) = (1200.0, 800.0);
 
 struct State {
-    map: Map,
     mouse: Mouse,
     imgui_wrapper: ImGuiWrapper,
     scenes: scenes::Stack,
@@ -34,7 +33,6 @@ struct State {
 
 impl State {
     fn new(ctx: &mut Context, resource_path: &path::Path) -> GameResult<State> {
-        let map = Map::new(ctx);
         let mouse = Default::default();
         let imgui_wrapper = ImGuiWrapper::new(ctx);
 
@@ -45,7 +43,6 @@ impl State {
 
         Ok(
             Self {
-                map,
                 mouse,
                 imgui_wrapper,
                 input_binding: input::create_input_binding(),
@@ -63,10 +60,6 @@ struct Mouse {
 }
 
 impl Mouse {
-    fn grid_position(&self) -> na::Point2<u32> {
-        na::Point2::new(((self.x - 10.0) / map::TILE_SIZE) as u32, ((self.y - 25.0) / map::TILE_SIZE) as u32)
-    }
-
     fn relative_position(&self) -> mint::Point2<f32> {
         mint::Point2 { x: self.x, y: self.y }
     }
@@ -90,11 +83,6 @@ impl ggez::event::EventHandler for State {
         if ggez::input::mouse::button_pressed(ctx, ggez::input::mouse::MouseButton::Left) {
             if ggez::input::mouse::position(ctx) != self.mouse.relative_position(){
                 self.mouse.set_position(ggez::input::mouse::position(ctx));
-                if map::Map::on_map(self.mouse.get_position()) {
-                    let mouse_position = self.mouse.grid_position();
-                    println!("button pressed x: {}, y: {}", mouse_position.x, mouse_position.y);
-                    self.map.set_selected_tile(ctx, mouse_position);
-                }
             }
         }
 
@@ -113,7 +101,6 @@ impl ggez::event::EventHandler for State {
         let fps = timer::fps(ctx);
         let fps_display = Text::new(format!("FPS: {}", fps as u32));
 
-        self.map.render(ctx);
         graphics::draw(ctx, &fps_display, (na::Point2::new(900.0, 20.0), graphics::WHITE),)?;
         self.scenes.draw(ctx);
         self.imgui_wrapper.render_scene_ui(ctx, &mut self.scenes);

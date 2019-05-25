@@ -16,6 +16,7 @@ use crate::systems::*;
 use crate::world::World;
 use crate::network;
 use crate::map;
+use crate::vision::*;
 
 
 pub struct LevelScene {
@@ -43,6 +44,7 @@ impl LevelScene {
         world
             .specs_world
             .add_resource(map::Map::new(ctx));
+        
 
         let dispatcher = Self::register_systems();
 
@@ -74,13 +76,14 @@ impl LevelScene {
             .specs_world
             .create_entity()
             .with(components::Graphic { mesh: circle })
-            .with(components::Transform { position: na::Point2::new(300.0, 300.0), rotation: 0.0, size })
+            .with(components::Transform { position: na::Point2::new(300.0, 300.0), grid_position: map::Map::grid_position(na::Point2::new(300.0, 300.0)), rotation: 0.0, size: size })
             .with(components::Motion {
                 velocity: na::Vector2::new(0.0, 0.0),
                 acceleration: na::Vector2::new(0.0, 0.0),
             })
             .with(components::ArrowController)
             .with(components::Connection::default())
+            .with(components::Vision::default())
             .build();
     }
 }
@@ -103,9 +106,26 @@ impl scene::Scene<World, input::Event> for LevelScene {
             let mouse_pos = na::Point2::new(input_state.mouse_position.0, input_state.mouse_position.1);
             if map::Map::on_map(mouse_pos) {
                 let mouse_position = map::Map::grid_position(mouse_pos);
-                println!("button pressed x: {}, y: {}", mouse_position.x, mouse_position.y);
+                //println!("button pressed x: {}, y: {}", mouse_position.x, mouse_position.y);
                 map.set_selected_tile(ctx, mouse_position);
             }
+
+            let selected_entity = gameworld.specs_world.read_resource::<resources::Selected>();
+            let positions = gameworld.specs_world.read_storage::<components::Transform>();
+            let visions = gameworld.specs_world.read_storage::<components::Vision>();
+            match selected_entity.player {
+                Some(e) =>  {
+                    let pos = positions.get(e).unwrap().position;
+                    let grid_pos = map::Map::grid_position(pos);
+                    let vision = visions.get(e).unwrap();
+                    let grid_view = map::Map::grid_view(&vision.view, grid_pos);
+                    map.set_selected_player_view(ctx, Some(grid_view));
+                }
+
+                None => map.set_selected_player_view(ctx, None),
+            }
+
+
         }
         self.dispatcher.dispatch(&gameworld.specs_world.res);
         if self.done {
@@ -165,8 +185,23 @@ impl scene::Scene<World, input::Event> for LevelScene {
                 ui.separator();
                 let selected_entity = gameworld.specs_world.read_resource::<resources::Selected>();
                 let positions = gameworld.specs_world.read_storage::<components::Transform>();
+                let mut visions = gameworld.specs_world.write_storage::<components::Vision>();
                 match selected_entity.player {
                     Some(e) =>  {
+                        // switch view
+                        ui.text(im_str!("Switch Vision"));
+                        let mut vision = visions.get_mut(e).unwrap();
+                        if ui.button(im_str!("Square"), ImVec2::new(100.0, 25.0)) {
+                            vision.update_view(ViewShape::SQUARE);
+                        }
+                        if ui.button(im_str!("Diamond"), ImVec2::new(100.0, 25.0)) {
+                            vision.update_view(ViewShape::DIAMOND);
+                        }
+                        if ui.button(im_str!("Triangle"), ImVec2::new(100.0, 25.0)) {
+                            vision.update_view(ViewShape::TRIANGLE);
+                        }
+                        ui.separator();
+
                         let pos = positions.get(e).unwrap().position;
                         ui.text_colored(ImVec4::new(1.0, 1.0, 1.0, 1.0),im_str!("Player:  XXX "));
                         ui.separator();
@@ -194,7 +229,7 @@ impl scene::Scene<World, input::Event> for LevelScene {
                         });
                         ui.separator();
                     },
-                    None => println!("none"), 
+                    None => {}, 
                 }
                 
 

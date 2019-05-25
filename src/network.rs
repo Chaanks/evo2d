@@ -16,7 +16,7 @@ impl Client {
         })
     }
 
-    pub fn send_data(&mut self, msg: &str) -> Result<(), Error> {
+    pub fn send_data(&mut self, msg: String) -> Result<(), Error> {
         self.stream.write(msg.as_bytes())?;
         Ok(())
     }

@@ -9,6 +9,8 @@ mod util;
 mod world;
 mod components;
 mod network;
+mod vision;
+
 
 use std::env;
 use std::path;
@@ -89,8 +91,8 @@ impl ggez::event::EventHandler for State {
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
             self.scenes.update(ctx);
+            self.scenes.world.resources.sync(ctx);
         }
-        self.scenes.world.resources.sync(ctx);
 
         Ok(())
     }

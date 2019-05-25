@@ -1,6 +1,6 @@
 use crate::types::*;
 use crate::network::Client;
-
+use crate::vision::*;
 use specs::*;
 use specs_derive::*;
 use ggez::graphics;
@@ -9,6 +9,45 @@ use ggez::graphics;
 // ///////////////////////////////////////////////////////////////////////
 // Components
 // ///////////////////////////////////////////////////////////////////////
+
+/// View
+#[derive(Component)]
+#[storage(VecStorage)]
+pub struct Vision {
+    pub view: Vec<(i32, i32)>,
+}
+
+impl Default for Vision {
+    fn default() -> Self {
+        Self {
+            view: SQUARE_ID.to_vec(),
+        }
+    }
+}
+
+impl Vision {
+    pub fn new(shape: ViewShape) -> Self {
+        let mut view = vec!();
+        match shape {
+            ViewShape::SQUARE => view = SQUARE_ID.to_vec(),
+            ViewShape::DIAMOND => view = DIAMOND_ID.to_vec(),
+            ViewShape::TRIANGLE => view = TRIANGLE_ID.to_vec(),
+        }
+
+        Self {
+            view,
+        }
+    }
+
+    pub fn update_view(&mut self, shape: ViewShape) {
+        match shape {
+            ViewShape::SQUARE => self.view = SQUARE_ID.to_vec(),
+            ViewShape::DIAMOND => self.view = DIAMOND_ID.to_vec(),
+            ViewShape::TRIANGLE => self.view = TRIANGLE_ID.to_vec(),
+        }
+    }
+}
+
 
 
 /// Network
@@ -30,6 +69,7 @@ pub struct Graphic {
 #[storage(VecStorage)]
 pub struct Transform {
     pub position: na::Point2<f32>,
+    pub grid_position: na::Point2<u32>,
     pub rotation: f32,
     pub size: f32,
 }
@@ -72,4 +112,5 @@ pub fn register_components(specs_world: &mut World) {
     specs_world.register::<Player>();
     specs_world.register::<Graphic>();
     specs_world.register::<Connection>();
+    specs_world.register::<Vision>();
 }

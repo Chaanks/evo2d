@@ -16,7 +16,8 @@ impl<'a> specs::System<'a> for NetworkSystem {
 
     fn run(&mut self, (pos, mut con): Self::SystemData) {
         for (pos, con) in (&pos, &mut con).join() {
-            con.socket.send_data("yo");
+            let data  = format!("{}:{}", pos.grid_position.x, pos.grid_position.y);
+            con.socket.send_data(data);
         }
     }
 }
@@ -51,19 +52,21 @@ impl<'a> specs::System<'a> for MovementSystem {
         // both of them.
         for (pos, motion) in (&mut pos, &motion).join() {
             pos.position += motion.velocity;
+            let x = (pos.grid_position.x as f32 + motion.velocity.x as f32) as i32;
+            let y = (pos.grid_position.y as f32 + motion.velocity.y as f32) as i32;
 
-            if  pos.position.x < map::TILE_SIZE + map::WIDTH_OFFSET  + pos.size {
-                pos.position.x -= motion.velocity.x;
+            if  x > 0 && x < (map::CELL_NUMBER - 1) as i32 {
+                pos.grid_position.x = x as u32;
             
-            } else if  pos.position.x > map::SIZE - map::TILE_SIZE + map::WIDTH_OFFSET - pos.size {
-                pos.position.x -= motion.velocity.x;
+            }
+            if  y > 0 && y < (map::CELL_NUMBER - 1) as i32 {
+                pos.grid_position.y = y as u32;
+            
             }
 
-            if pos.position.y < map::TILE_SIZE + map::HEIGHT_OFFSET  + pos.size {
-                pos.position.y -= motion.velocity.y;
-            } else if  pos.position.y > map::SIZE - map::TILE_SIZE + map::HEIGHT_OFFSET - pos.size {
-                pos.position.y -= motion.velocity.y;
-            }
+            pos.position = map::Map::relative_position(pos.grid_position);
+            pos.position.x += (map::TILE_SIZE / 2.0 - pos.size / 2.0) - 3.0;
+            pos.position.y += (map::TILE_SIZE / 2.0 - pos.size / 2.0) - 3.0;
             
         }
     }
@@ -100,10 +103,9 @@ impl<'a> specs::System<'a> for SelectionSystem {
 
     fn run(&mut self, (entity, input, mut selection, transform): Self::SystemData) {
         //println!("Mouse position: {:?}", input.mouse_position);
+        let mouse_pos = na::Point2::new(input.mouse_position.0, input.mouse_position.1);
         for (entity, transform) in (&*entity, &transform).join() {
-                if input.mouse_position.0 >= transform.position.x - transform.size && input.mouse_position.0 < transform.position.x + transform.size {
-                    if input.mouse_position.1 >= transform.position.y - transform.size && input.mouse_position.1 < transform.position.y + transform.size {
-
+            if map::Map::grid_position(mouse_pos) == transform.grid_position {
                         if selection.player == Some(entity) {
                             if selection.isClicked {
                                 if input.mouse_pressed {
@@ -125,7 +127,6 @@ impl<'a> specs::System<'a> for SelectionSystem {
                         }
                     }
                 }
-        }
 
         if !selection.isClicked {
             selection.player = None;

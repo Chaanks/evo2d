@@ -18,7 +18,15 @@ class ClientThread(threading.Thread):
         while True:
 
             r = self.clientsocket.recv(2048)
-            print("message: ", r)
+
+            data = r.decode("utf-8")
+            print("message: ", data)
+
+            action = ""
+            if int(data[0:2]) < 2:
+                action = "1"
+            elif int(data[0:2]) > 30
+
             self.clientsocket.sendall(b'123456')
 
 

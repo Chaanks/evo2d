@@ -86,7 +86,8 @@ impl Default for Cell {
 pub struct Map {
     cells: Vec<Cell>,
     bg: Mesh,
-    selected_tile: Mesh,
+    selected_tile: Option<Mesh>,
+    selected_player: Option<Mesh>,
 }
 
 impl Map {
@@ -103,32 +104,53 @@ impl Map {
             }
         }
         let bg =  Self::background(&cells, ctx);
-        let selected_tile = graphics::Mesh::new_rectangle(
-            ctx,
-            graphics::DrawMode::fill(),
-            graphics::Rect::new(0.0, 0.0, 0.0 , 0.0),
-            graphics::WHITE,
-        ).unwrap();
-
         Self {
             cells,
             bg,
-            selected_tile,
+            selected_tile: None,
+            selected_player: None,
         }
     }
 
     pub fn render(&self, ctx: &mut Context) {
         graphics::draw(ctx, &self.bg, (na::Point2::new(WIDTH_OFFSET, HEIGHT_OFFSET),)).unwrap();
-        graphics::draw(ctx, &self.selected_tile, (na::Point2::new(WIDTH_OFFSET, HEIGHT_OFFSET),)).unwrap();
+        match &self.selected_tile {
+            Some(e) => graphics::draw(ctx, e, (na::Point2::new(WIDTH_OFFSET, HEIGHT_OFFSET),)).unwrap(),
+            None => {},
+        
+        }
+        match &self.selected_player {
+            Some(e) => graphics::draw(ctx, e, (na::Point2::new(WIDTH_OFFSET, HEIGHT_OFFSET),)).unwrap(),
+            None => {},
+        
+        }
     }
 
     pub fn set_selected_tile(&mut self, ctx: &mut Context, mouse_position: na::Point2<u32>) {
-            self.selected_tile = graphics::Mesh::new_rectangle(
+            self.selected_tile = Some(graphics::Mesh::new_rectangle(
             ctx,
             graphics::DrawMode::fill(),
-            graphics::Rect::new((mouse_position.x as f32) * TILE_SIZE + 1.0, (mouse_position.y as f32) * TILE_SIZE + 1.0, TILE_SIZE - 1.0 , TILE_SIZE - 1.0),
-            graphics::WHITE,
-        ).unwrap();
+            graphics::Rect::new((mouse_position.x as f32) * TILE_SIZE + 0.5, (mouse_position.y as f32) * TILE_SIZE + 0.5, TILE_SIZE - 1.0 , TILE_SIZE - 1.0),
+            Color::new(1.0, 1.0, 1.0, 0.1),
+        ).unwrap());
+    }
+
+    pub fn set_selected_player_view(&mut self, ctx: &mut Context, grid_pos: Option<Vec<na::Point2<u32>>>) {
+        match grid_pos {
+            Some(positions) => {
+                let mesh = &mut MeshBuilder::new();
+                let color = Color::new(1.0, 1.0, 1.0, 0.3);
+                for pos in positions {
+                    mesh.rectangle(DrawMode::fill(),
+                                graphics::Rect::new((pos.x as f32) * TILE_SIZE + 0.5, (pos.y as f32) * TILE_SIZE + 0.5, TILE_SIZE - 1.0 , TILE_SIZE - 1.0),
+                                color);
+                }
+
+                self.selected_player = Some(mesh.build(ctx).unwrap());
+            },
+
+            None => self.selected_player = None,
+        }
     }
 
     fn background(cells: &Vec<Cell>, ctx: &mut Context) -> Mesh{
@@ -153,7 +175,7 @@ impl Map {
                     _ => color = Color::new(0.0, 0.0, 0.0, 1.0),
                 }
 
-                println!("i:{}, j:{}, current{:?}, color:{:?}",i, j, current, color);
+                //println!("i:{}, j:{}, current{:?}, color:{:?}",i, j, current, color);
                 mesh.rectangle(DrawMode::fill(),
                             graphics::Rect::new(start_x, start_y, TILE_SIZE, TILE_SIZE),
                             color);
@@ -181,4 +203,25 @@ impl Map {
     pub fn grid_position(pos: na::Point2<f32>) -> na::Point2<u32> {
         na::Point2::new(((pos.x - 10.0) / TILE_SIZE) as u32, ((pos.y - 25.0) / TILE_SIZE) as u32)
     }
+
+    pub fn relative_position(pos: na::Point2<u32>) -> na::Point2<f32> {
+        na::Point2::new(((pos.x as f32) * TILE_SIZE) + WIDTH_OFFSET + 6.0, ((pos.y as f32) * TILE_SIZE) + HEIGHT_OFFSET + 6.0) 
+    }
+
+    pub fn grid_view(vision: &Vec<(i32, i32)>, position: na::Point2<u32>) -> Vec<na::Point2<u32>> {
+        let mut views = Vec::new();
+        for view in vision {
+            
+            let tile: na::Point2<u32> = na::Point2::new((view.0 + position.x as i32) as u32, (view.1 + position.y as i32) as u32);
+            if tile.x >= CELL_NUMBER  as u32 || tile.y >= CELL_NUMBER as u32 {
+                continue;
+            }
+            
+            //println!("position: {}, view: {:?}, tile: {:?}", position, view, tile);
+            views.push(tile);
+        }
+
+        views
+    }
+
 }

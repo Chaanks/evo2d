@@ -25,7 +25,8 @@ class ClientThread(threading.Thread):
             action = ""
             if int(data[0:2]) < 2:
                 action = "1"
-            elif int(data[0:2]) > 30
+            elif int(data[0:2]) > 30:
+                 action = "1"
 
             self.clientsocket.sendall(b'123456')
 
